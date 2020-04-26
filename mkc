@@ -1,0 +1,179 @@
+#!/bin/bash
+
+CONFILE=".mkc.conf"
+
+# create a config file default 
+init(){
+    if [ ! -e "$CONFILE" ]  
+    then 
+        # Creating config file in shell script
+        echo "Creating configuration file $CONFILE"
+        echo \
+'# Used Compiler 
+GCC=gcc
+# Build Flags
+FLAGS="-std=c11 -Wall"
+
+# Program Name
+NAMEAPP="myapp"
+
+# Source code directory
+SRCDIR="src"
+# Object directory
+OBJDIR="obj"
+
+# Source code file extension
+C=".c"' >> "$CONFILE"
+
+    else
+        echo "Configuration file $CONFILE already exists!"
+    fi
+
+    # Gitignore C
+    if [ ! -e ".gitignore" ]
+    then
+        echo "Creating .gitignore"
+        echo \
+'# Prerequisites
+*.d
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf' > ".gitignore"
+    fi
+
+    # Creating directories
+    [ ! -e "src" ] && echo "Creating SRC directory" && mkdir -p src || echo "SRC already exists"
+    [ ! -e "obj" ] && echo "Creating OBJ directory" && mkdir -p obj || echo "OBJ already exists"
+}
+
+# Print in display basic functions in script
+usage(){
+cat <<EOF
+Usage: ${0##*/} [options]
+    
+Options:
+    init         creates a configuration file in ${CONFILE}
+    all          Compile all C source code files and create an executable file
+    clean        Clears all application binaries
+    help         Displays this help
+
+EOF
+exit
+}
+
+# Remove all object files in object directory (OBJDIR)
+# and the link for binarys 
+clean(){
+    [ ! -e "$CONFILE" ] && echo "$CONFILE Not found!" && usage
+    source $CONFILE
+    rm -rv $OBJDIR/* $NAMEAPP
+}
+
+# Compiling the source code archives (C) in source directory (SRCDIR)
+compiler(){
+    [ ! -e "$CONFILE" ] && echo "$CONFILE Not found!" && usage
+    source $CONFILE
+
+    # Finds all source code files (C) in the source code directory (SRCDIR) 
+    # and creates all respective object files
+    SRC=$(find $SRCDIR -name "*$C")
+    OBJ=$(echo $SRC | sed -r 's/'$SRCDIR'\//'$OBJDIR'\//g ; s/'$C'\s/.o /g ; s/'$C'$/.o/g')
+    # Counts how many files there are in the code directory
+    NUM=$(echo $SRC | wc -w)
+
+    [ ! -e "$OBJDIR" ] && mkdir $OBJDIR
+    # Clones the directory tree from the source directory to the object directory
+    mkdir -p $(find $SRCDIR -type d | sed 's/'$SRCDIR'\//'$OBJDIR'\//')
+
+    CONT=0
+    for I in $(seq 1 $NUM); do
+        # Destructures the words containing the names of the code files and objects
+        S=$(echo $SRC | awk '{print $'$I'}')
+        O=$(echo $OBJ | awk '{print $'$I'}')
+
+        # Takes the modification dates of the code files and objects
+        DATESRC=$(date -r $S +%s)
+        if [ -e "$O" ]; then
+            DATEOBJ=$(date -r $O +%s)
+        else 
+            DATEOBJ=0
+        fi
+
+        # Checks if the code modification date is more recent than that of the object
+        if [ $DATESRC -ge $DATEOBJ ]; then
+            echo "compiling $S file for $O"
+            # Checks if the code build was successful
+            if  ! $GCC $FLAGS -c $S -o $O 
+            then
+                exit
+            fi
+            # Uncount a number in the counter for each compiled file
+            CONT=$(($CONT + 1))
+        fi
+    done
+
+    # Checks if compiled files are present and if the link exists for binaries
+    if [ $CONT -gt 0 -o ! -e "$NAMEAPP" ]; then
+        echo "compiling link for program $NAMEAPP"
+        # Checks if the link build was successful
+        if ! $GCC $FLAGS $OBJ -o $NAMEAPP
+        then
+            exit
+        fi
+    fi
+    echo "Done!"
+}
+
+case "$1" in
+    "init") init ;;
+    "all"| "") compiler ;;
+    "clean") clean ;;
+    "help") usage ;;
+esac
