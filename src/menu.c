@@ -11,20 +11,26 @@
 // limpa a tela
 #define cleanScreen system("clear")
 
-char *options[100];
+char **options;
 int cont = 0;
-void (*functions[100])(void);
+void (**functions)(void);
 
 void menuClear()
 {
     cont = 0;
+    options = (char**) calloc(cont, sizeof(char*));
+    functions = calloc(cont, sizeof(void));
 }
 
 void menuAddItem(char *op, void (*func)())
 {
-    options[cont] = op;
-    (functions[cont]) = func;
     cont++;
+    options = (char**) realloc(options, sizeof(char*) * cont);
+    if (options == NULL) exit(0);
+    options[cont-1] = op;
+    functions = realloc(functions, sizeof(void) * cont);
+    if (functions == NULL) exit(0);
+    (functions[cont-1]) = func;
 }
 
 void menu() {
