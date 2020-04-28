@@ -15,7 +15,7 @@ GCC=gcc
 FLAGS="-std=c11 -Wall -g"
 
 # Program Name
-NAMEAPP="myapp"
+NAMEAPP="myapp.out"
 
 # Source code directory
 SRCDIR="src"
