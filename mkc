@@ -12,7 +12,7 @@ init(){
 '# Used Compiler 
 GCC=gcc
 # Build Flags
-FLAGS="-std=c11 -Wall"
+FLAGS="-std=c11 -Wall -g"
 
 # Program Name
 NAMEAPP="myapp"
@@ -171,9 +171,16 @@ compiler(){
     echo "Done!"
 }
 
+debug(){
+    compiler
+    [[ ! "$(which gdb)" ]] && echo "You need install gdb" exit
+    gdb $NAMEAPP -tui
+}
+
 case "$1" in
     "init") init ;;
     "all"| "") compiler ;;
     "clean") clean ;;
+    "debug" | "d") debug ;;
     "help") usage ;;
 esac
