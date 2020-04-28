@@ -177,10 +177,17 @@ debug(){
     gdb $NAMEAPP -tui
 }
 
+execute(){
+    compiler
+    echo 
+   ./$NAMEAPP 
+}
+
 case "$1" in
     "init") init ;;
     "all"| "") compiler ;;
     "clean") clean ;;
     "debug" | "d") debug ;;
     "help") usage ;;
+    "exec" | "e") execute ;;
 esac
