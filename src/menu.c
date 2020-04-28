@@ -18,19 +18,33 @@ void (**functions)(void);
 void menuClear()
 {
     cont = 0;
-    options = (char**) calloc(cont, sizeof(char*));
-    functions = calloc(cont, sizeof(void));
+    /* options = (char**) calloc(cont, sizeof(char*)); */
+    /* functions = calloc(cont, sizeof(void)); */
+    free(options);
+    free(functions);
 }
 
 void menuAddItem(char *op, void (*func)())
 {
     cont++;
-    options = (char**) realloc(options, sizeof(char*) * cont);
-    if (options == NULL) exit(0);
-    options[cont-1] = op;
-    functions = realloc(functions, sizeof(void) * cont);
-    if (functions == NULL) exit(0);
-    (functions[cont-1]) = func;
+    if (cont == 1) {
+        options = (char**) malloc(sizeof(char*) * cont);
+        if (options == NULL) exit(0);
+        options[cont-1] = op;
+
+        functions = malloc(sizeof(void*) * cont);
+        if (functions == NULL) exit(0);
+        (functions[cont-1]) = func;
+    }
+    else {
+        options = (char**) realloc(options, sizeof(char*) * cont);
+        if (options == NULL) exit(0);
+        options[cont-1] = op;
+
+        functions = realloc(functions, sizeof(void) * cont);
+        if (functions == NULL) exit(0);
+        (functions[cont-1]) = func;
+    }
 }
 
 void menu() {
