@@ -196,7 +196,7 @@ compiler(){
 debug(){
     compiler
     [[ ! "$(which gdb)" ]] && echo "You need install gdb" exit
-    gdb $NAMEAPP -tui
+    gdb $NAMEAPP 
 }
 
 execute(){
