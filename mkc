@@ -23,7 +23,8 @@ SRCDIR="src"
 OBJDIR="obj"
 
 # Source code file extension
-C=".c"' >> "$CONFILE"
+C=".c"
+H=".h"' >> "$CONFILE"
 
     else
         echo "Configuration file $CONFILE already exists!"
@@ -125,8 +126,12 @@ compiler(){
     # and creates all respective object files
     SRC=$(find $SRCDIR -name "*$C")
     OBJ=$(echo $SRC | sed -r 's/'$SRCDIR'\//'$OBJDIR'\//g ; s/'$C'\s/.o /g ; s/'$C'$/.o/g')
+    HEADERS=$(find $SRCDIR -name "*$H")
+    PROTOTYPES=$(ctags -x --c-kinds=pf --fields=+S $HEADERS | grep "prototype" | awk '{ print $1 }')
+
     # Counts how many files there are in the code directory
     NUM=$(echo $SRC | wc -w)
+    # NUMHEADER=(echo $HEADERS | wc -w)
 
     [ ! -e "$OBJDIR" ] && mkdir $OBJDIR
     # Clones the directory tree from the source directory to the object directory
@@ -138,24 +143,41 @@ compiler(){
         S=$(echo $SRC | awk '{print $'$I'}')
         O=$(echo $OBJ | awk '{print $'$I'}')
 
-        # Takes the modification dates of the code files and objects
-        DATESRC=$(date -r $S +%s)
-        if [ -e "$O" ]; then
-            DATEOBJ=$(date -r $O +%s)
-        else 
-            DATEOBJ=0
-        fi
+        FUNCTIONS=$(ctags -x --c-kinds=pf --fields=+S $S | grep "function" | awk '{ print $1 }')
+        CONTDEP=0
+        for F in $FUNCTIONS; do
+            for PR in $PROTOTYPES; do
+                if [ $F == $PR -o $F == "main" ] 
+                then
+                   CONTDEP=1
+                   DENPENDENCE+="$O "
+                   break
+                fi
+            done
+            [ $CONTDEP -eq 1 ] && break
+        done
 
-        # Checks if the code modification date is more recent than that of the object
-        if [ $DATESRC -ge $DATEOBJ ]; then
-            echo "compiling $S file for $O"
-            # Checks if the code build was successful
-            if  ! $GCC $FLAGS -c $S -o $O 
-            then
-                exit
+        if [ $CONTDEP -eq 1 ]
+        then
+            # Takes the modification dates of the code files and objects
+            DATESRC=$(date -r $S +%s)
+            if [ -e "$O" ]; then
+                DATEOBJ=$(date -r $O +%s)
+            else 
+                DATEOBJ=0
             fi
-            # Uncount a number in the counter for each compiled file
-            CONT=$(($CONT + 1))
+
+            # Checks if the code modification date is more recent than that of the object
+            if [ $DATESRC -ge $DATEOBJ ]; then
+                echo "compiling $S file for $O"
+                # Checks if the code build was successful
+                if  ! $GCC $FLAGS -c $S -o $O 
+                then
+                    exit
+                fi
+                # Uncount a number in the counter for each compiled file
+                CONT=$(($CONT + 1))
+            fi
         fi
     done
 
@@ -163,7 +185,7 @@ compiler(){
     if [ $CONT -gt 0 -o ! -e "$NAMEAPP" ]; then
         echo "compiling link for program $NAMEAPP"
         # Checks if the link build was successful
-        if ! $GCC $FLAGS $OBJ -o $NAMEAPP
+        if ! $GCC $FLAGS $DENPENDENCE -o $NAMEAPP
         then
             exit
         fi

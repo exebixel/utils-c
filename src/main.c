@@ -1,16 +1,7 @@
 #include <stdio.h>
 #include "tui-utils.h"
 #include "menu.h"
-
-void test()
-{
-    printf("Hello word!!\n");
-}
-
-void test2()
-{
-    printf("Teste2\n");
-}
+#include "test.c"
 
 int main()
 {
