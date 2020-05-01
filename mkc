@@ -120,6 +120,7 @@ clean(){
 # Compiling the source code archives (C) in source directory (SRCDIR)
 compiler(){
     [ ! -e "$CONFILE" ] && echo "$CONFILE Not found!" && usage
+    [ ! $(which ctags) ] && echo "You need install ctags" && exit
     source $CONFILE
 
     # Finds all source code files (C) in the source code directory (SRCDIR) 
