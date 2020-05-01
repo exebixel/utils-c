@@ -131,6 +131,8 @@ compiler(){
     HEADERS=$(find $SRCDIR -name "*$H")
     if [ ! "$HEADERS" == "" ]; then
         PROTOTYPES=$(ctags -x --c-kinds=pf --fields=+S $HEADERS | grep "prototype" | awk '{ print $1 }')
+    else
+        PROTOTYPES=0
     fi
 
     # Counts how many files there are in the code directory
@@ -146,25 +148,19 @@ compiler(){
         S=$(echo $SRC | awk '{print $'$I'}')
         O=$(echo $OBJ | awk '{print $'$I'}')
 
-        if [ ! "$PROTOTYPES" == "" ]
-        then
-            FUNCTIONS=$(ctags -x --c-kinds=pf --fields=+S $S | grep "function" | awk '{ print $1 }')
-            CONTDEP=0
-            for F in $FUNCTIONS; do
-                for PR in $PROTOTYPES; do
-                    if [ $F == $PR -o $F == "main" ] 
-                    then
-                       CONTDEP=1
-                       DENPENDENCE+="$O "
-                       break
-                    fi
-                done
-                [ $CONTDEP -eq 1 ] && break
+        FUNCTIONS=$(ctags -x --c-kinds=pf --fields=+S $S | grep "function" | awk '{ print $1 }')
+        CONTDEP=0
+        for F in $FUNCTIONS; do
+            for PR in $PROTOTYPES; do
+                if [ $F == $PR -o $F == "main" ] 
+                then
+                   CONTDEP=1
+                   DENPENDENCE+="$O "
+                   break
+                fi
             done
-        else 
-           CONTDEP=1
-           DENPENDENCE+="$O "
-        fi
+            [ $CONTDEP -eq 1 ] && break
+        done
 
         if [ $CONTDEP -eq 1 ]
         then
