@@ -127,12 +127,14 @@ compiler(){
     # and creates all respective object files
     SRC=$(find $SRCDIR -name "*$C")
     OBJ=$(echo $SRC | sed -r 's/'$SRCDIR'\//'$OBJDIR'\//g ; s/'$C'\s/.o /g ; s/'$C'$/.o/g')
+
     HEADERS=$(find $SRCDIR -name "*$H")
-    PROTOTYPES=$(ctags -x --c-kinds=pf --fields=+S $HEADERS | grep "prototype" | awk '{ print $1 }')
+    if [ ! "$HEADERS" == "" ]; then
+        PROTOTYPES=$(ctags -x --c-kinds=pf --fields=+S $HEADERS | grep "prototype" | awk '{ print $1 }')
+    fi
 
     # Counts how many files there are in the code directory
     NUM=$(echo $SRC | wc -w)
-    # NUMHEADER=(echo $HEADERS | wc -w)
 
     [ ! -e "$OBJDIR" ] && mkdir $OBJDIR
     # Clones the directory tree from the source directory to the object directory
@@ -144,19 +146,25 @@ compiler(){
         S=$(echo $SRC | awk '{print $'$I'}')
         O=$(echo $OBJ | awk '{print $'$I'}')
 
-        FUNCTIONS=$(ctags -x --c-kinds=pf --fields=+S $S | grep "function" | awk '{ print $1 }')
-        CONTDEP=0
-        for F in $FUNCTIONS; do
-            for PR in $PROTOTYPES; do
-                if [ $F == $PR -o $F == "main" ] 
-                then
-                   CONTDEP=1
-                   DENPENDENCE+="$O "
-                   break
-                fi
+        if [ ! "$PROTOTYPES" == "" ]
+        then
+            FUNCTIONS=$(ctags -x --c-kinds=pf --fields=+S $S | grep "function" | awk '{ print $1 }')
+            CONTDEP=0
+            for F in $FUNCTIONS; do
+                for PR in $PROTOTYPES; do
+                    if [ $F == $PR -o $F == "main" ] 
+                    then
+                       CONTDEP=1
+                       DENPENDENCE+="$O "
+                       break
+                    fi
+                done
+                [ $CONTDEP -eq 1 ] && break
             done
-            [ $CONTDEP -eq 1 ] && break
-        done
+        else 
+           CONTDEP=1
+           DENPENDENCE+="$O "
+        fi
 
         if [ $CONTDEP -eq 1 ]
         then
