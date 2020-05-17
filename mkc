@@ -100,10 +100,12 @@ cat <<EOF
 Usage: ${0##*/} [options]
     
 Options:
-    init         creates a configuration file in ${CONFILE}
-    all          Compile all C source code files and create an executable file
-    clean        Clears all application binaries
-    help         Displays this help
+    init                Creates a configuration file in ${CONFILE} and create .gitignore
+    all                 Compile all C source code files and create an executable file
+    clean, c            Clears all application binaries
+    debug, d            Compile program and open gdb debugger
+    exec,  e            Compile program and execute
+    help, -h, --help    Displays this help
 
 EOF
 exit
@@ -213,8 +215,8 @@ execute(){
 case "$1" in
     "init") init ;;
     "all"| "") compiler ;;
-    "clean") clean ;;
+    "clean" | "c") clean ;;
     "debug" | "d") debug ;;
-    "help") usage ;;
     "exec" | "e") execute ;;
+    "help" | "-h" | "--help") usage ;;
 esac
